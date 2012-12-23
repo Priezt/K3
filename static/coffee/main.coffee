@@ -7,7 +7,7 @@ conf = {
 	radius: 50,
 	map_width: 9,
 	map_height: 5,
-	min_zoom: 0.6,
+	min_zoom: 0.8,
 	max_zoom: 3,
 	zoom_step: 0.2,
 	angle_step: 10,
@@ -40,6 +40,9 @@ root.get_real_board_size = ->
 		'height': height,
 	}
 
+add_troop = (x, y, new_troop) ->
+	board[x][y].troop = new_troop
+
 initialize_board = ->
 	board = []
 	for x in [0...conf.map_width]
@@ -53,6 +56,8 @@ initialize_board = ->
 			#console.log board
 			#console.log board[-1..][0]
 			board[-1..][0].push new_grid
+	new_troop = new Troop("ZhangFei")
+	add_troop 3, 3, new_troop
 
 go_through_board = (func) ->
 	for column in board
@@ -110,6 +115,10 @@ $ ->
 		if g.panning
 			ofx = evt.offsetX - g.panning_start_x
 			ofy = evt.offsetY - g.panning_start_y
+			oang = Math.atan2 ofy, ofx
+			oradius = Math.sqrt(Math.pow(ofx, 2) + Math.pow(ofy, 2))
+			ofx = oradius * Math.cos(oang - g.angle * Math.PI / 180)
+			ofy = oradius * Math.sin(oang - g.angle * Math.PI / 180)
 			#console.log "#{ofx}, #{ofy}"
 			{width, height} = root.get_real_board_size()
 			#console.log "#{width}, #{height}"
@@ -161,3 +170,4 @@ $ ->
 						if g.zoom > conf.min_zoom
 							g.zoom -= conf.zoom_step
 				redraw_board()
+

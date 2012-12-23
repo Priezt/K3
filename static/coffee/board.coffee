@@ -34,12 +34,21 @@ class root.Grid
 		return false if Math.sqrt(Math.pow(x - mx, 2) + Math.pow(y - my, 2)) > range
 		return true
 
+	draw_troop: (ctx, x, y) ->
+		ctx.save()
+		ctx.font = "bold 18px MS Gothic"
+		ctx.textAlign = "center"
+		ctx.textBaseline = "middle"
+		ctx.fillStyle = "#000"
+		#console.log @troop.name + ":" + x + "," + y
+		ctx.fillText @troop.name, x, y
+		ctx.restore()
+
 	draw: (ctx) ->
 		{x, y} = @get_center()
 		#console.log "#{x}, #{y} - #{g.current_x}, #{g.current_y}"
 		ctx.save()
 		if @x == g.current_x and @y == g.current_y
-			#console.log "red"
 			ctx.strokeStyle = "rgb(0,255,0)"
 		ctx.translate x, y
 		ctx.rotate g.angle * Math.PI / 180
@@ -51,4 +60,6 @@ class root.Grid
 			ctx.stroke()
 			ctx.rotate 60 * Math.PI / 180
 		ctx.restore()
+		if @troop
+			@draw_troop ctx, x, y
 
