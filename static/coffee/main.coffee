@@ -13,6 +13,8 @@ conf = {
 	map_width: 9,
 	map_height: 5,
 	min_zoom: 0.8,
+	first_zoom: 1.4,
+	second_zoom: 2.2,
 	max_zoom: 3,
 	zoom_step: 0.2,
 	angle_step: 10,
@@ -40,6 +42,7 @@ g = {
 
 class Troop
 	constructor: (@name) ->
+		@amount = 1000
 
 ###########################
 # Grid
@@ -93,6 +96,14 @@ class Grid
 		#console.log @troop.name + ":" + x + "," + y
 		ctx.fillText @troop.name, x, y
 		ctx.restore()
+		if g.zoom >= conf.first_zoom
+			ctx.save()
+			# show amount and troop type
+			ctx.restore()
+		if g.zoom >= conf.second_zoom
+			ctx.save()
+			# show more details
+			ctx.restore()
 
 	draw: (ctx) ->
 		{x, y} = @get_center()
