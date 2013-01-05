@@ -1,5 +1,13 @@
 root = exports ? window
 
+canvas = null
+ctx = null
+
+sqrt3 = Math.sqrt 3
+board = root.board
+conf = root.conf
+g = root.g
+
 get_real_board_size = ->
 	width = conf.radius * g.zoom * 1.5 * (conf.map_width - 1)
 	height = conf.radius * g.zoom * sqrt3 * conf.map_height
@@ -22,7 +30,10 @@ initialize_board = ->
 			#console.log board[-1..][0]
 			board[-1..][0].push new_grid
 	new_troop = new Troop("ZhangFei")
-	new_troop.put(3, 3)
+	board[3][3].put new_troop
+	new_troop = new Troop("GuanYu")
+	board[4][4].put new_troop
+	board[5][5].put board[4][4].pick()
 
 go_through_board = (func) ->
 	for column in board
@@ -57,6 +68,9 @@ adjust_canvas_size = ->
 $ ->
 	canvas = $("#game_board")[0]
 	ctx = canvas.getContext? "2d"
+	console.log ctx
+	console.log canvas
+	console.log root
 	window.onresize = -> adjust_canvas_size()
 	initialize_board()
 	adjust_canvas_size()

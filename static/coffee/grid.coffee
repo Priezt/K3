@@ -1,5 +1,7 @@
 root = exports ? window
 
+sqrt3 = Math.sqrt 3
+
 class root.Grid
 	constructor: (@x, @y) ->
 
