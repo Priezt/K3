@@ -2,6 +2,7 @@ root = exports ? window
 
 canvas = null
 ctx = null
+pad = null
 
 sqrt3 = Math.sqrt 3
 board = root.board
@@ -29,9 +30,9 @@ initialize_board = ->
 			#console.log board
 			#console.log board[-1..][0]
 			board[-1..][0].push new_grid
-	new_troop = new Troop("ZhangFei")
+	new_troop = new Troop("张飞")
 	board[3][3].put new_troop
-	new_troop = new Troop("GuanYu")
+	new_troop = new Troop("关羽")
 	board[4][4].put new_troop
 	board[5][5].put board[4][4].pick()
 
@@ -54,23 +55,40 @@ draw_grids = ->
 		grid.draw(ctx)
 
 redraw_board = ->
+	# draw background
 	ctx.fillStyle = "rgb(150,150,100)"
 	ctx.fillRect 0, 0, canvas.width, canvas.height
+	# draw board
 	draw_grids()
+	# draw selected troop
+	draw_selected_troop()
+
+draw_selected_troop = ->
+	if g.selected_troop
+		g.selected_troop.grid.draw_selected(ctx)
 
 adjust_canvas_size = ->
 	ctx.canvas.width = Math.round window.innerWidth * 0.90
 	ctx.canvas.height = Math.round window.innerHeight * 0.90
 	g.board_width = ctx.canvas.width
 	g.board_height = ctx.canvas.height
+	pad.adjust_position()
 	redraw_board()
+
+current_grid = ->
+	if g.current_x < 0
+		return null
+	if g.current_y < 0
+		return null
+	board[g.current_x][g.current_y]
 
 $ ->
 	canvas = $("#game_board")[0]
 	ctx = canvas.getContext? "2d"
-	console.log ctx
-	console.log canvas
-	console.log root
+	pad = new root.Pad()
+	#console.log ctx
+	#console.log canvas
+	#console.log root
 	window.onresize = -> adjust_canvas_size()
 	initialize_board()
 	adjust_canvas_size()
@@ -88,6 +106,17 @@ $ ->
 		evt = window.event ? event
 		evt.preventDefault()
 		g.panning = false
+		if g.mode == 'normal'
+			if evt.button == 0
+				g.selected_troop = current_grid()?.troop
+				console.log "#{g.selected_troop?.name} selected"
+				redraw_board()
+				if g.selected_troop
+					pad.left.empty()
+					pad.log g.selected_troop.name
+				else
+					pad.left.empty()
+					pad.log "unselected"
 	$(canvas).mousemove (event) ->
 		evt = window.event ? event
 		evt.preventDefault()
@@ -121,6 +150,7 @@ $ ->
 				g.current_x = grid.x
 				g.current_y = grid.y
 				#console.log "#{grid.x}, #{grid.y}"
+				pad.status "#{grid.x}, #{grid.y}"
 				redraw_board()
 			else
 				g.current_x = -1

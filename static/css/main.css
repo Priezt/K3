@@ -8,3 +8,32 @@ body {
 	border-width: 2px;
 	border-color: #000;
 }
+
+.pad_text {
+	display: block;
+	padding: 2px;
+	margin: 2px;
+}
+
+.side_pad {
+	overflow-y: auto;
+}
+
+.pad {
+	margin: 0px;
+	padding: 0px;
+	color: #FFF;
+	text-align: left;
+	font-style: bold;
+	font-size: 18px;
+	font-family: "Tahoma";
+	width: 100px;
+	height: 100px;
+	display: relative;
+	border-style: none;
+	background-color: #00F;
+	opacity: 0.5;
+}
+
+#bottom_pad {
+}
