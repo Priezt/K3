@@ -33,7 +33,7 @@ load_global = ->
 		panning_start_center_y: 0,
 		center_x: 0.5,
 		center_y: 0.5,
-		mode: 'normal',
+		state: null,
 	}
 
 load_global()

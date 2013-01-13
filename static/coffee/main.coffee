@@ -82,47 +82,45 @@ current_grid = ->
 		return null
 	board[g.current_x][g.current_y]
 
-$ ->
-	canvas = $("#game_board")[0]
-	ctx = canvas.getContext? "2d"
-	pad = new root.Pad()
-	#console.log ctx
-	#console.log canvas
-	#console.log root
-	window.onresize = -> adjust_canvas_size()
-	initialize_board()
-	adjust_canvas_size()
-	$(canvas).mousedown (event) ->
-		evt = window.event ? event
-		evt.preventDefault()
-		if evt.button == 1
-			g.panning_start_x = evt.offsetX
-			g.panning_start_y = evt.offsetY
-			g.panning_start_center_x = g.center_x
-			g.panning_start_center_y = g.center_y
-			g.panning = true
-		#console.log evt.button
-	$(canvas).mouseup (event) ->
-		evt = window.event ? event
-		evt.preventDefault()
+class StateMachine
+	constructor: () ->
+
+	change_to: (new_state_machine) ->
+		g.state = new_state_machine
+
+	left_mouse_down: (x, y) ->
+
+	left_mouse_up: (x, y) ->
+		g.selected_troop = current_grid()?.troop
+		console.log "#{g.selected_troop?.name} selected"
+		redraw_board()
+		if g.selected_troop
+			pad.left.empty()
+			pad.log g.selected_troop.name
+			@change_to new StateMachineTroop()
+		else
+			pad.left.empty()
+			pad.log "unselected"
+			@change_to new StateMachineNormal()
+
+	middle_mouse_down: (x, y) ->
+		g.panning_start_x = x
+		g.panning_start_y = y
+		g.panning_start_center_x = g.center_x
+		g.panning_start_center_y = g.center_y
+		g.panning = true
+
+	middle_mouse_up: (x, y) ->
 		g.panning = false
-		if g.mode == 'normal'
-			if evt.button == 0
-				g.selected_troop = current_grid()?.troop
-				console.log "#{g.selected_troop?.name} selected"
-				redraw_board()
-				if g.selected_troop
-					pad.left.empty()
-					pad.log g.selected_troop.name
-				else
-					pad.left.empty()
-					pad.log "unselected"
-	$(canvas).mousemove (event) ->
-		evt = window.event ? event
-		evt.preventDefault()
+
+	right_mouse_down: (x, y) ->
+
+	right_mouse_up: (x, y) ->
+
+	mouse_move: (x, y) ->
 		if g.panning
-			ofx = evt.offsetX - g.panning_start_x
-			ofy = evt.offsetY - g.panning_start_y
+			ofx = x - g.panning_start_x
+			ofy = y - g.panning_start_y
 			oang = Math.atan2 ofy, ofx
 			oradius = Math.sqrt(Math.pow(ofx, 2) + Math.pow(ofy, 2))
 			ofx = oradius * Math.cos(oang - g.angle * Math.PI / 180)
@@ -145,7 +143,7 @@ $ ->
 			redraw_board()
 		else
 			grid = get_some_from_board (grid) ->
-				grid.containing_cursor evt.offsetX, evt.offsetY
+				grid.containing_cursor x, y
 			if grid
 				g.current_x = grid.x
 				g.current_y = grid.y
@@ -155,6 +153,58 @@ $ ->
 			else
 				g.current_x = -1
 				g.current_y = -1
+
+	wheel_down: ->
+		if g.zoom > conf.min_zoom
+			g.zoom -= conf.zoom_step
+			redraw_board()
+
+	wheel_up: ->
+		if g.zoom < conf.max_zoom
+			g.zoom += conf.zoom_step
+			redraw_board()
+
+	alt_wheel_down: ->
+		g.angle -= conf.angle_step
+		if g.angle < 0
+			g.angle += 360
+		redraw_board()
+
+	alt_wheel_up: ->
+		g.angle += conf.angle_step
+		if g.angle >= 360
+			g.angle -= 360
+		redraw_board()
+
+class StateMachineNormal extends StateMachine
+
+class StateMachineTroop extends StateMachine
+
+$ ->
+	canvas = $("#game_board")[0]
+	ctx = canvas.getContext? "2d"
+	pad = new root.Pad()
+	initialize_board()
+	adjust_canvas_size()
+	g.state = new StateMachineNormal()
+	# Bind events
+	window.onresize = -> adjust_canvas_size()
+	$(canvas).mousedown (event) ->
+		evt = window.event ? event
+		evt.preventDefault()
+		if evt.button == 1
+			g.state.middle_mouse_down evt.offsetX, evt.offsetY
+	$(canvas).mouseup (event) ->
+		evt = window.event ? event
+		evt.preventDefault()
+		if evt.button == 0
+			g.state.left_mouse_up evt.offsetX, evt.offsetY
+		if evt.button == 1
+			g.state.middle_mouse_up evt.offsetX, evt.offsetY
+	$(canvas).mousemove (event) ->
+		evt = window.event ? event
+		evt.preventDefault()
+		g.state.mouse_move evt.offsetX, evt.offsetY
 	$(canvas).bind 'contextmenu', (event) ->
 		evt = window.event ? event
 		evt.preventDefault()
@@ -162,21 +212,13 @@ $ ->
 		evt = window.event ? event
 		evt.preventDefault()
 		if not g.panning
-				if evt.altKey
-					if evt.wheelDelta > 0
-							g.angle += conf.angle_step
-							if g.angle >= 360
-								g.angle -= 360
-					if evt.wheelDelta < 0
-							g.angle -= conf.angle_step
-							if g.angle < 0
-								g.angle += 360
-				else
-					if evt.wheelDelta > 0
-						if g.zoom < conf.max_zoom
-							g.zoom += conf.zoom_step
-					if evt.wheelDelta < 0
-						if g.zoom > conf.min_zoom
-							g.zoom -= conf.zoom_step
-				redraw_board()
-
+			if evt.altKey
+				if evt.wheelDelta > 0
+					g.state.alt_wheel_up()
+				if evt.wheelDelta < 0
+					g.state.alt_wheel_down()
+			else
+				if evt.wheelDelta > 0
+					g.state.wheel_up()
+				if evt.wheelDelta < 0
+					g.state.wheel_down()

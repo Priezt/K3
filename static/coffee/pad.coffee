@@ -42,6 +42,8 @@ class root.Pad
 
 	log: (msg) ->
 		@text "right", msg
+		console.log $("#right_pad div").last().offset().top
+		@right.animate({scrollTop: $("#right_pad div").last().offset().top}, 100)
 
 	status: (msg) ->
 		@bottom.empty()
